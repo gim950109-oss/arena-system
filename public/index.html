@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ARENA RPG</title>
+<style>
+body{margin:0;background:#101522;color:#edf2ff;font-family:sans-serif;padding:18px}
+main{max-width:600px;margin:auto}
+h1{color:#91baff}
+.card{background:#1c2638;border:1px solid #34435d;border-radius:14px;padding:16px;margin:14px 0}
+.bar{height:12px;background:#39445a;border-radius:10px;overflow:hidden;margin:8px 0}
+.fill{height:100%;background:#55a5ff}
+.mp{background:#a77aff}
+button{background:#426fd0;color:white;border:0;padding:12px;border-radius:9px;margin:4px}
+input{background:#101522;color:white;border:1px solid #52617c;padding:10px;border-radius:8px;width:65%}
+.item{padding:10px;border-bottom:1px solid #39445a}
+</style>
+</head>
+<body>
+<main>
+<h1>⚔ ARENA RPG</h1>
+<div class="card">
+<h2 id="name">초보 모험가</h2>
+<p id="level">Lv. 1 / 초보자</p>
+<p id="hp"></p>
+<div class="bar"><div id="hpbar" class="fill"></div></div>
+<p id="mp"></p>
+<div class="bar"><div id="mpbar" class="fill mp"></div></div>
+<p id="exp"></p>
+<p id="gold"></p>
+</div>
+<div class="card">
+<h2>능력치</h2>
+<div id="stats"></div>
+</div>
+<div class="card">
+<h2>인벤토리</h2>
+<div id="inventory"></div>
+<input id="item" placeholder="아이템 이름">
+<button onclick="addItem()">아이템 추가</button>
+</div>
+<div class="card">
+<h2>장비</h2>
+<div id="equipment"></div>
+</div>
+</main>
+<script>
+const id="arena-player";
+async function load(){
+const r=await fetch("/api/state/"+id);
+const s=await r.json();
+const p=s.player;
+document.getElementById("name").textContent=p.name;
+document.getElementById("level").textContent="Lv. "+p.level+" / "+p.job;
+document.getElementById("hp").textContent="HP "+p.hp+" / "+p.maxHp;
+document.getElementById("mp").textContent="MP "+p.mp+" / "+p.maxMp;
+document.getElementById("exp").textContent="EXP "+p.exp;
+document.getElementById("gold").textContent="골드 "+p.gold;
+document.getElementById("hpbar").style.width=(p.hp/p.maxHp*100)+"%";
+document.getElementById("mpbar").style.width=(p.mp/p.maxMp*100)+"%";
+document.getElementById("stats").innerHTML=Object.entries(s.stats).map(([k,v])=>`<p>${k}: ${v}</p>`).join("");
+document.getElementById("inventory").innerHTML=s.inventory.map(x=>`<div class="item">${x.name} × ${x.amount}</div>`).join("") || "보유 아이템 없음";
+document.getElementById("equipment").textContent=JSON.stringify(s.equipment);
+}
+async function addItem(){
+const item=document.getElementById("item").value.trim();
+if(!item)return;
+await fetch("/api/state/"+id+"/action",{
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({action:"add_item",item,amount:1})
+});
+document.getElementById("item").value="";
+load();
+}
+load();
+</script>
+</body>
+</html>
